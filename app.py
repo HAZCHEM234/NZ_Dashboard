@@ -5,6 +5,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
+import statsmodels.api as sm
 
 # Load data
 merged_data = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/merged_data.csv')
@@ -69,7 +70,6 @@ def create_figures():
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16
 
 app = dash.Dash(__name__)
-server = app.server
 
 # Layout of the app
 app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial, sans-serif'}, children=[

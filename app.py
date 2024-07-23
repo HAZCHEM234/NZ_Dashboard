@@ -22,9 +22,9 @@ labor_market['Date'] = pd.to_datetime(labor_market['Date'], format='%d/%m/%Y')
 def create_figures():
     fig1 = px.line(merged_data, x='Year', y='Unemployment rate', title='Unemployment Rate vs Date', template='plotly_dark')
     fig2 = px.line(merged_data, x='Year', y='House price index (HPI)', title='House Price Index (HPI) vs Date', template='plotly_dark')
-    fig3 = px.line(merged_data, x='Year', y='estimate', title='Estimates vs Date', template='plotly_dark')
+    fig3 = px.line(merged_data, x='Year', y='estimate', title='Estimates Immigration vs Date', template='plotly_dark')
     fig4 = px.scatter(merged_data, x='Unemployment rate', y='House price index (HPI)', trendline='ols', title='Unemployment vs HPI', template='plotly_dark')
-    fig5 = px.scatter(merged_data, x='estimate', y='House price index (HPI)', trendline='ols', title='Estimate vs HPI', template='plotly_dark')
+    fig5 = px.scatter(merged_data, x='estimate', y='House price index (HPI)', trendline='ols', title='Estimate Immigration vs HPI', template='plotly_dark')
     
     immigration_filtered = immigration_data[
         (immigration_data['visa'] != 'TOTAL') & 
@@ -75,7 +75,7 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
     html.H1("Economic and Housing Data Dashboard", style={'textAlign': 'center', 'color': '#ffffff'}),
     
     dcc.Tabs([
-        dcc.Tab(label='Unemployment & Housing Data', children=[
+        dcc.Tab(label='Unemployment, Immigration & Housing Data', children=[
             html.Div([
                 dcc.Graph(figure=create_figures()[0], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[1], style={'width': '48%', 'display': 'inline-block'}),
@@ -100,7 +100,6 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
                 dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[13], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[14], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[15], style={'width': '48%', 'display': 'inline-block'})
             ])
         ])
     ])

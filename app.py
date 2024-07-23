@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import statsmodels.api as sm
+import os
 
 # Load data
 merged_data = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/merged_data.csv')

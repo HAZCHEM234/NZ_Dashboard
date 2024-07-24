@@ -94,12 +94,12 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
         dcc.Tab(label='Housing & Labor Market Data', children=[
             html.Div([
                 dcc.Graph(figure=create_figures()[8], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[10], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[13], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[14], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[10], style={'width': '48%', 'display': 'inline-block'}),
             ])
         ])
     ])

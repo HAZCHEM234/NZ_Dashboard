@@ -57,7 +57,7 @@ def create_figures():
     fig9 = px.scatter(house_price_index, x='House price index (HPI)', y='Total value of housing stock', trendline='ols', title='HPI vs Total Value of Housing Stocks', template='plotly_dark')
     fig10 = px.line(house_price_index, x='Date', y='House Sale', title='House Sales Over Time', template='plotly_dark')
     fig11 = px.line(house_price_index, x='Date', y='Residential investment (GDP)', title='Residential Investment Over Time', template='plotly_dark')
-    fig17 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
+    fig15 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
     
     labor_market_filtered = labor_market[labor_market['Date'] >= '2018-01-01']
     
@@ -66,6 +66,7 @@ def create_figures():
     fig14 = px.line(labor_market_filtered, x='Date', y='Working-age population %', title='Working Age Population vs Date (2018 to Current)', template='plotly_dark')
     fig15 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Working-age population %', trendline='ols', title='Unemployment Rate vs Working Age Population (2018 to Current)', template='plotly_dark')
     fig16 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Average hourly earnings (ordinary time and overtime)', trendline='ols', title='Unemployment Rate vs Average Hourly Earnings (2018 to Current)', template='plotly_dark')
+    fig17 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
    
     
     return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16, fig17
@@ -96,10 +97,9 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
         dcc.Tab(label='Housing & Labor Market Data', children=[
             html.Div([
                 dcc.Graph(figure=create_figures()[8], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[13], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[16], style={'width': '48%', 'display': 'inline-block'}),
+                 dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[10], style={'width': '48%', 'display': 'inline-block'}),
             ])

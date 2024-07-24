@@ -65,8 +65,9 @@ def create_figures():
     fig14 = px.line(labor_market_filtered, x='Date', y='Working-age population %', title='Working Age Population vs Date (2018 to Current)', template='plotly_dark')
     fig15 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Working-age population %', trendline='ols', title='Unemployment Rate vs Working Age Population (2018 to Current)', template='plotly_dark')
     fig16 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Average hourly earnings (ordinary time and overtime)', trendline='ols', title='Unemployment Rate vs Average Hourly Earnings (2018 to Current)', template='plotly_dark')
+    fig17 = px.line(labor_market_filtered, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
     
-    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16
+    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16, fig17
 
 app = dash.Dash(__name__)
 
@@ -95,7 +96,7 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
             html.Div([
                 dcc.Graph(figure=create_figures()[8], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[13], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[14], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[16], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
@@ -107,4 +108,3 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-

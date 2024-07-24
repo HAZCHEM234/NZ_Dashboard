@@ -67,9 +67,10 @@ def create_figures():
     fig15 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Working-age population %', trendline='ols', title='Unemployment Rate vs Working Age Population (2018 to Current)', template='plotly_dark')
     fig16 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Average hourly earnings (ordinary time and overtime)', trendline='ols', title='Unemployment Rate vs Average Hourly Earnings (2018 to Current)', template='plotly_dark')
     fig17 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
+    fig18 = px.line(house_price_index, x='Date', y='House price index (HPI)', title='HPI vs Date (Quarterly)', template='plotly_dark')
    
     
-    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16, fig17
+    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16, fig17, fig18
 
 app = dash.Dash(__name__)
 
@@ -98,8 +99,9 @@ app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial,
             html.Div([
                 dcc.Graph(figure=create_figures()[8], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[16], style={'width': '48%', 'display': 'inline-block'}),
-                 dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
+                dcc.Graph(figure=create_figures()[17], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
                 dcc.Graph(figure=create_figures()[10], style={'width': '48%', 'display': 'inline-block'}),
             ])

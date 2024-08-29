@@ -1,113 +1,272 @@
-import dash
-from dash import html, dcc
-from dash.dependencies import Input, Output
-import plotly.express as px
+from dash import Dash, dcc, html, Input, Output
+import yfinance as yf
 import pandas as pd
-import statsmodels.api as sm
+import plotly.graph_objs as go
+import plotly.io as pio
+from statsmodels.tsa.stattools import acf, pacf
+from statsmodels.tsa.arima.model import ARIMA
+import dash_bootstrap_components as dbc
 import os
 
-# Load data
-merged_data = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/merged_data.csv')
-immigration_data = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/2018-2024%20Immigration%20.csv')
-house_price_index = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/House_price_csv_mode.csv')
-labor_market = pd.read_csv('https://raw.githubusercontent.com/HAZCHEM234/NZ_data/main/data/Labor%20market%20clean.csv')
 
-# Convert date columns to datetime
-merged_data['Year'] = pd.to_datetime(merged_data['Year'], format='%Y')
-immigration_data['Date'] = pd.to_datetime(immigration_data['Date'], format='%d/%m/%Y')
-house_price_index['Date'] = pd.to_datetime(house_price_index['Date'], format='%d/%m/%Y')
-labor_market['Date'] = pd.to_datetime(labor_market['Date'], format='%d/%m/%Y')
-
-# Create initial figures
-def create_figures():
-    fig1 = px.line(merged_data, x='Year', y='Unemployment rate', title='Sum of Unemployment Rate by Year', template='plotly_dark')
-    fig2 = px.line(merged_data, x='Year', y='House price index (HPI)', title='Sum of House Price Index (HPI) by Year', template='plotly_dark')
-    fig3 = px.line(merged_data, x='Year', y='estimate', title='Sum of Estimates Immigration by Year', template='plotly_dark')
-    fig4 = px.scatter(merged_data, x='Unemployment rate', y='House price index (HPI)', trendline='ols', title='Sum of Unemployment vs HPI', template='plotly_dark')
-    fig5 = px.scatter(merged_data, x='estimate', y='House price index (HPI)', trendline='ols', title='Sum of Estimate Immigration vs HPI', template='plotly_dark')
-    
-    immigration_filtered = immigration_data[
-        (immigration_data['visa'] != 'TOTAL') & 
-        (immigration_data['citizenship'] != 'TOTAL') & 
-        (immigration_data['country_of_residence'] != 'TOTAL')
-    ]
-    
-    fig6 = px.pie(immigration_filtered, names='visa', values='estimate', title='Estimate by Visa (Excluding TOTAL)', template='plotly_dark')
-    fig7 = px.pie(immigration_filtered, names='citizenship', values='estimate', title='Estimate by Citizenship (Excluding TOTAL)', template='plotly_dark')
-    
-    country_residence_sorted = (
-        immigration_filtered
-        .groupby('country_of_residence')['estimate']
-        .sum()
-        .nlargest(10)
-        .reset_index()
+# Define the custom template
+custom_template = go.layout.Template(
+    layout=dict(
+        font=dict(family="Arial", size=12, color="black"),
+        title=dict(font=dict(family="Arial", size=20, color="black")),
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='lightgrey',
+            zeroline=False,
+            showline=True,
+            linewidth=2,
+            linecolor='black',
+            ticks='outside'
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='lightgrey',
+            zeroline=False,
+            showline=True,
+            linewidth=2,
+            linecolor='black',
+            ticks='outside'
+        ),
+        legend=dict(
+            font=dict(family="Arial", size=12, color="black"),
+            bgcolor="white",
+            bordercolor="black",
+            borderwidth=1
+        )
     )
-    
-    fig8 = px.bar(
-        country_residence_sorted,
-        y='country_of_residence',
-        x='estimate',
-        orientation='h',
-        title='Largest Estimate by Country of Residence (Excluding TOTAL)',
-        text='estimate',
-        template='plotly_dark'
+)
+
+# Define a dictionary to map ticker symbols to company names
+ticker_to_name = {
+    'AIR.NZ': 'Air New Zealand',
+    'UAL': 'United Airlines',
+    'QAN.AX': 'Qantas',
+    'DAL': 'Delta'
+}
+
+# Function to plot stock prices
+def plot_stock_vs_market(ticker_stock, start_date='2020-01-01', end_date='2024-01-01'):
+    data_stock = yf.download(ticker_stock, start=start_date, end=end_date)
+    company_name = ticker_to_name.get(ticker_stock, ticker_stock)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=data_stock.index,
+        y=data_stock['Adj Close'],
+        mode='lines',
+        name=ticker_stock,
+        line=dict(color='#7AE582')
+    ))
+
+    fig.update_layout(
+        title=f'{company_name} (2020-2024)',
+        xaxis_title='Date',
+        yaxis_title='Adjusted Close Price',
+        legend_title='Ticker',
+        template=custom_template
     )
-    fig8.update_layout(yaxis={'categoryorder':'total ascending'})
-    
-    fig9 = px.scatter(house_price_index, x='House price index (HPI)', y='Total value of housing stock', trendline='ols', title='HPI vs Total Value of Housing Stocks', template='plotly_dark')
-    fig10 = px.line(house_price_index, x='Date', y='House Sale', title='House Sales Over Time', template='plotly_dark')
-    fig11 = px.line(house_price_index, x='Date', y='Residential investment (GDP)', title='Residential Investment Over Time', template='plotly_dark')
-    fig15 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
-    
-    labor_market_filtered = labor_market[labor_market['Date'] >= '2018-01-01']
-    
-    fig12 = px.line(labor_market_filtered, x='Date', y='Unemployment rate %', title='Unemployment Rate vs Date (2018 to Current)', template='plotly_dark')
-    fig13 = px.line(labor_market_filtered, x='Date', y='Average hourly earnings (ordinary time and overtime)', title='Average Hourly Rate vs Date (2018 to Current)', template='plotly_dark')
-    fig14 = px.line(labor_market_filtered, x='Date', y='Working-age population %', title='Working Age Population vs Date (2018 to Current)', template='plotly_dark')
-    fig15 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Working-age population %', trendline='ols', title='Unemployment Rate vs Working Age Population (2018 to Current)', template='plotly_dark')
-    fig16 = px.scatter(labor_market_filtered, x='Unemployment rate %', y='Average hourly earnings (ordinary time and overtime)', trendline='ols', title='Unemployment Rate vs Average Hourly Earnings (2018 to Current)', template='plotly_dark')
-    fig17 = px.line(house_price_index, x='Date', y='Total value of housing stock', title='Housing Stock vs Date', template='plotly_dark')
-    fig18 = px.line(house_price_index, x='Date', y='House price index (HPI)', title='HPI vs Date (Quarterly)', template='plotly_dark')
-   
-    
-    return fig1, fig2, fig3, fig4, fig5, fig6, fig7, fig8, fig9, fig10, fig11, fig12, fig13, fig14, fig15, fig16, fig17, fig18
 
-app = dash.Dash(__name__)
+    return fig
 
-# Layout of the app
-app.layout = html.Div(style={'backgroundColor': '#1f2c56', 'fontFamily': 'Arial, sans-serif'}, children=[
-    html.H1("Economic and Housing Data Dashboard", style={'textAlign': 'center', 'color': '#ffffff'}),
+def plot_differenced_closing_prices(ticker, start_date='2020-01-01', end_date='2024-01-01'):
+    # Fetch historical market data for the given ticker
+    data_stock = yf.download(ticker, start=start_date, end=end_date)
+    data = data_stock['Close']
+    data_diff = data.diff().dropna()
+
+    # Get the company name based on the ticker
+    company_name = ticker_to_name.get(ticker, ticker)  # Default to ticker if not found
+
+    # Create the figure
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=data_diff.index,
+        y=data_diff,
+        mode='lines',
+        name=f'{ticker} Differenced Close Price',
+        line=dict(color='#25A18E')
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title=f'Differenced {company_name} Closing Prices (2020-2024)',
+        xaxis_title='Date',
+        yaxis_title='Differenced Close Price',
+        legend_title='Price Type',
+        template=custom_template
+    )
+
+    return fig
+
+
+def plot_acf_plotly(ticker, start_date='2020-01-01', end_date='2024-01-01', lags=50):
+    # Fetch historical market data for the given ticker
+    data_stock = yf.download(ticker, start=start_date, end=end_date)
     
-    dcc.Tabs([
-        dcc.Tab(label='Sum of Yearly Unemployment, Immigration & Housing Data', children=[
-            html.Div([
-                dcc.Graph(figure=create_figures()[0], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[1], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[2], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[3], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[4], style={'width': '48%', 'display': 'inline-block'})
-            ])
-        ]),
-        dcc.Tab(label='Immigration Data', children=[
-            html.Div([
-                dcc.Graph(figure=create_figures()[5], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[6], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[7], style={'width': '48%', 'display': 'inline-block'})
-            ])
-        ]),
-        dcc.Tab(label='Housing & Labor Market Data', children=[
-            html.Div([
-                dcc.Graph(figure=create_figures()[17], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[16], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[8], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[12], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[11], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[9], style={'width': '48%', 'display': 'inline-block'}),
-                dcc.Graph(figure=create_figures()[10], style={'width': '48%', 'display': 'inline-block'}),
-            ])
-        ])
+    # Use the 'Close' price
+    data = data_stock['Close']
+    
+    # Differencing to make the data stationary
+    data_diff = data.diff().dropna()
+    
+    # Calculate ACF
+    acf_values = acf(data_diff, nlags=lags)
+    
+    # Get the company name based on the ticker
+    company_name = ticker_to_name.get(ticker, ticker)  # Default to ticker if not found
+    
+    # Create ACF plot
+    fig = go.Figure(go.Bar(
+        x=list(range(len(acf_values))),
+        y=acf_values,
+        name='ACF',
+        marker_color='#9FFFCB'
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title=f'ACF of Differenced {company_name} Data (2020-2024)',
+        xaxis_title='Lags',
+        yaxis_title='Correlation',
+        template=custom_template
+    )
+
+    return fig
+
+def plot_pacf_plotly(ticker, start_date='2020-01-01', end_date='2024-01-01', lags=50):
+    # Fetch historical market data for the given ticker
+    data_stock = yf.download(ticker, start=start_date, end=end_date)
+    data = data_stock['Close']
+    data_diff = data.diff().dropna()
+    
+    # Calculate PACF
+    pacf_values = pacf(data_diff, nlags=lags)
+    
+    # Get the company name based on the ticker
+    company_name = ticker_to_name.get(ticker, ticker)  # Default to ticker if not found
+    
+    # Create PACF plot
+    fig = go.Figure(go.Bar(
+        x=list(range(len(pacf_values))),
+        y=pacf_values,
+        name='PACF',
+        marker_color='#004E64'
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title=f'PACF of Differenced {company_name} Data (2020-2024)',
+        xaxis_title='Lags',
+        yaxis_title='Correlation',
+        template=custom_template
+    )
+
+    return fig
+
+def plot_arima_forecast(ticker, start_date='2020-01-01', end_date='2024-01-01', p=1, d=1, q=1, forecast_steps=10):
+    data_stock = yf.download(ticker, start=start_date, end=end_date)
+    data = data_stock['Close']
+
+    # Set frequency to daily ('D') and forward fill missing data
+    data = data.asfreq('D').ffill()
+
+    model = ARIMA(data, order=(p, d, q))
+    model_fit = model.fit()
+
+    # Forecast future values
+    forecast = model_fit.forecast(steps=forecast_steps)
+    forecast_index = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=forecast_steps, freq='D')
+
+    # Create figure
+    fig = go.Figure()
+
+    # Add historical data trace
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data,
+        mode='lines',
+        name='Historical Close Price',
+        line=dict(color='#00A5CF')
+    ))
+
+    # Add forecasted data trace
+    fig.add_trace(go.Scatter(
+        x=forecast_index,
+        y=forecast,
+        mode='lines',
+        name='Forecasted Close Price',
+        line=dict(color='red')
+    ))
+
+    # Update layout
+    company_name = ticker_to_name.get(ticker, ticker)  # Default to ticker if not found
+    fig.update_layout(
+        title=f'{company_name} Close Price Forecast',
+        xaxis_title='Date',
+        yaxis_title='Close Price',
+        legend_title='Data',
+        template=custom_template
+    )
+
+    return fig
+
+
+# Initialize the Dash app
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+app.layout = html.Div([
+    html.H1(
+        "Airline Stock Price Analysis Using ARIMA: ACF and PACF Insights",
+        style={
+            'textAlign': 'center',  # Center aligns the title
+            'marginBottom': '4vw',
+            'marginTop': '4vw'
+        }
+    ),
+    dcc.Dropdown(
+        id='ticker-dropdown',
+        options=[{'label': name, 'value': ticker} for ticker, name in ticker_to_name.items()],
+        value='AIR.NZ',  # Default value
+        style={'width': '50%', 'marginBottom': '4vw', 'marginLeft': '1vw'}  # Adds space below the dropdown
+    ),
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='stock-graph'), width=6),
+        dbc.Col(dcc.Graph(id='arima-graph'), width=6),
+    ], style={'marginBottom': '30px'}),  # Adds space below the first row of graphs
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='acf-graph'), width=6),
+        dbc.Col(dcc.Graph(id='pacf-graph'), width=6),
+    ], style={'marginBottom': '30px'}),  # Adds space below the second row of graphs
+    dbc.Row([
+        dbc.Col(dcc.Graph(id='differenced-graph'), width=12),
     ])
 ])
+
+
+@app.callback(
+    [Output('stock-graph', 'figure'),
+     Output('differenced-graph', 'figure'),
+     Output('acf-graph', 'figure'),
+     Output('pacf-graph', 'figure'),
+     Output('arima-graph', 'figure')],
+    [Input('ticker-dropdown', 'value')]
+)
+def update_graph(selected_ticker):
+    stock_fig = plot_stock_vs_market(selected_ticker)
+    differenced_fig = plot_differenced_closing_prices(selected_ticker)
+    acf_fig = plot_acf_plotly(selected_ticker)
+    pacf_fig = plot_pacf_plotly(selected_ticker)
+    arima_fig = plot_arima_forecast(selected_ticker)
+    
+    return stock_fig, differenced_fig, acf_fig, pacf_fig, arima_fig
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
